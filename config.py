@@ -1,6 +1,7 @@
 import os
+from dotenv import load_dotenv #new
 basedir = os.path.abspath(os.path.dirname(__file__))
-
+load_dotenv(os.path.join(basedir, '.env')) #new
 
 class Config:
     SECRET_KEY = os.environ.get('SECRET_KEY') or 'hard to guess string'
@@ -19,6 +20,13 @@ class Config:
     def init_app(app):
         pass
 
+class LocalConfig(Config): #new
+    DEBUG = True
+    DB_USERNAME = os.environ.get('LOCAL_DB_USERNAME')
+    DB_PASSWORD = os.environ.get('LOCAL_DB_PASSWORD')
+    DB_SERVER = 'localhost:3306'
+    DB_NAME = os.environ.get('LOCAL_DB_NAME')
+    SQLALCHEMY_DATABASE_URI = 'mysql+pymysql://' + DB_USERNAME + ':' + DB_PASSWORD + '@' + DB_SERVER + '/' + DB_NAME
 
 class DevelopmentConfig(Config):
     DEBUG = True
@@ -41,6 +49,6 @@ config = {
     'development': DevelopmentConfig,
     'testing': TestingConfig,
     'production': ProductionConfig,
-
+    'local': LocalConfig,
     'default': DevelopmentConfig
 }
