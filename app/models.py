@@ -60,7 +60,7 @@ class User(UserMixin, db.Model):
     def reset_password(token, new_password):
         s = Serializer(current_app.config['SECRET_KEY'])
         try:
-            data = s.loads(token.encode('utf-8'))
+            data = s.loads(token)#.encode('utf-8') removed because new serializer gives int
         except:
             return False
         user = User.query.get(data.get('reset'))
@@ -78,7 +78,7 @@ class User(UserMixin, db.Model):
     def change_email(self, token):
         s = Serializer(current_app.config['SECRET_KEY'])
         try:
-            data = s.loads(token.encode('utf-8'))
+            data = s.loads(token)#.encode('utf-8') removed because new serializer gives int
         except:
             return False
         if data.get('change_email') != self.id:

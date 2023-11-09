@@ -1,5 +1,5 @@
 import os
-from dotenv import load_dotenv #new
+from dotenv import load_dotenv #new, not helping with local config
 basedir = os.path.abspath(os.path.dirname(__file__))
 load_dotenv(os.path.join(basedir, '.env')) #new
 
@@ -24,8 +24,12 @@ class LocalConfig(Config): #new
     DEBUG = True
     DB_USERNAME = os.environ.get('LOCAL_DB_USERNAME')
     DB_PASSWORD = os.environ.get('LOCAL_DB_PASSWORD')
-    DB_SERVER = 'localhost:3306'
+    DB_SERVER = '192.168.1.35:3306' #TOIMIIIIIIIIIII #'Hannan.localdomain' #'192.168.1.35:3306' #'127.0.0.1:3306' #
     DB_NAME = os.environ.get('LOCAL_DB_NAME')
+
+    
+    #SQLALCHEMY_DATABASE_URI = 'mysql+pymysql://' + DB_USERNAME + ':' + DB_PASSWORD + '@' + DB_SERVER + '/' + DB_NAME + '?' + 'unix_socket=/run/mysqld/mysqld.sock'
+    #SQLALCHEMY_DATABASE_URI = 'mysql+pymysql://' + DB_USERNAME + ':' + DB_PASSWORD + '@' + DB_SERVER + '/' + DB_NAME + '?' + 'unix_socket=/mnt/c/xampp/mysql/mysql.sock'
     SQLALCHEMY_DATABASE_URI = 'mysql+pymysql://' + DB_USERNAME + ':' + DB_PASSWORD + '@' + DB_SERVER + '/' + DB_NAME
 
 class DevelopmentConfig(Config):
