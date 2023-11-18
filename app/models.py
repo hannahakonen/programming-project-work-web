@@ -111,7 +111,7 @@ class User(UserMixin, db.Model):
             return False
         if data.get('confirm') != self.id:
             return False
-        self.confirmed = True
+        self.confirmed = True   #(bool added because status was not changing in phpmyadmin)
         db.session.add(self)
         return True
 

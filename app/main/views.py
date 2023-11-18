@@ -5,11 +5,22 @@ from .forms import EditProfileForm, EditProfileAdminForm
 from .. import db
 from ..models import Role, User
 from ..decorators import admin_required
+#https://www.youtube.com/watch?v=B97qWOUvlnU
+import pandas as pd
+import json
+import plotly
+import plotly.express as px
+
 
 
 @main.route('/')
 def index():
-    return render_template('index.html')
+    #Graph
+    df = px.data.medals_wide()
+    fig1 = px.bar(df, x='nation', y=['gold', 'silver', 'bronze'], title="Wide-Form Input")
+    graph1JSON = json.dumps(fig1, cls=plotly.utils.PlotlyJSONEncoder)
+
+    return render_template('index.html', graph1JSON=graph1JSON)
 
 
 @main.route('/user/<username>')

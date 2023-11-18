@@ -1,9 +1,31 @@
 {% extends "base.html" %}
 
-{% block title %}Flasky{% endblock %}
+{% block title %}Spectra{% endblock %}
 
 {% block page_content %}
 <div class="page-header">
     <h1>Hello, {% if current_user.is_authenticated %}{{ current_user.username }}{% else %}Stranger{% endif %}!</h1>
 </div>
+<div class="row p-4">
+    <div class="card m-auto" style="width: 90;">
+        <div class="card-body">
+            <div id="chart1">
+            </div>
+            <p>
+                Lorem ipsum dolor sit, amet consectetur adipisicing elit. Dolorem quas necessitatibus quibusdam
+                consequatur vel neque. Ut incidunt delectus consectetur odit sed voluptatibus accusantium dolores illo
+                cupiditate, amet, provident magni quisquam animi molestiae fugit, laboriosam fuga libero eveniet quidem
+                quaerat facere nemo quia? Sint animi recusandae, vel aperiam, iusto laborum, sit quasi illo labore
+                tempore nihil veritatis aliquid perferendis. Tempora nulla odit rerum deserunt exercitationem iusto
+                beatae architecto nesciunt? Accusamus cumque sit quidem illum similique magni placeat obcaecati earum
+                culpa fugiat.
+            </p>
+        </div>
+    </div>
+</div>
+<script src="https://cdn.plot.ly/plotly-latest.min.js"></script>
+<script>
+    var graph1 = {{ graph1JSON | safe }};
+    Plotly.plot('chart1', graph1, {})
+</script>
 {% endblock %}
