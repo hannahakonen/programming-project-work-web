@@ -15,7 +15,19 @@ import plotly.express as px
 
 @main.route('/')
 def index():
-    #Graph
+    df = pd.DataFrame(dict(
+    x = [1, 2, 3, 4, 5],
+    y = [2, 4, 6, 8, 10]
+    ))
+    
+    fig = px.line(df, x="x", y="y", title="Unsorted Input") 
+
+    #fig.update_layout(title='Line Plot: Y vs X', xaxis_title='X-axis', yaxis_title='Y-axis')
+
+    # Convert the plot to graphJSON
+    graphJSON = json.dumps(fig, cls=plotly.utils.PlotlyJSONEncoder)
+    return render_template('index.html', graphJSON=graphJSON)
+
     df = px.data.medals_wide()
     fig1 = px.bar(df, x='nation', y=['gold', 'silver', 'bronze'], title="Wide-Form Input")
     graph1JSON = json.dumps(fig1, cls=plotly.utils.PlotlyJSONEncoder)
