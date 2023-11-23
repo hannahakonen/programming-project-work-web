@@ -11,6 +11,9 @@
         <div class="card-body">
             <div id="chart1">
             </div>
+            <div><label>Show Stem Plot</label>
+                <input type="checkbox" id="stemCheckbox" checked onchange="toggleStemPlot()">
+            </div>
             <p>
                 Lorem ipsum dolor sit, amet consectetur adipisicing elit. Dolorem quas necessitatibus quibusdam
                 consequatur vel neque. Ut incidunt delectus consectetur odit sed voluptatibus accusantium dolores illo
@@ -25,7 +28,47 @@
 </div>
 <script src="https://cdn.plot.ly/plotly-latest.min.js"></script>
 <script>
-    var graph1 = {{ graphJSON | safe }};
-    Plotly.plot('chart1', graph1, {})
+    var graphOriginal = {{ graphJSON | safe }};
+    var graph = graphOriginal;
+    var stemPlotsAdded = true;
+    var stemTraces = graph.data.filter(trace => trace.name && trace.name.startsWith('stemTrace_'));
+
+
+    // Explicitly set the title in the layout
+    graph.layout.title.text = 'New Title';
+
+    function toggleStemPlot() {
+        var checkbox = document.getElementById('stemCheckbox');
+
+        // Set visibility based on the checkbox state
+        for (var i = 0; i < stemTraces.length; i++) {
+            stemTraces[i].visible = checkbox.checked ? true : 'legendonly';
+        }
+
+        // Update the plot with the adjusted visibility
+        Plotly.update('chart1', stemTraces, graph.layout);
+
+        /*var checkbox = document.getElementById('stemCheckbox');
+        if (checkbox.checked) { 
+            // Stem plot is checked, show it
+            if (stemPlotsAdded)  
+            Plotly.react('chart1', graphOriginal.data, graph.layout);
+        } else {
+            // Stem plot is unchecked, remove it
+            graph.data = graph.data.filter(trace => !trace.name || !trace.name.startsWith('stemTrace_'));
+            Plotly.react('chart1', graph.data, graph.layout);
+        }*/
+    }
+
+    function removeStem() {
+        graph.data = graph.data.filter(trace => !trace.name || !trace.name.startsWith('stemTrace_')); /* removes all the peaks */
+
+        Plotly.react('chart1', graph, {});
+    }
+    
+    /*removeStem();*/
+
+    // Create the plot using Plotly.plot
+    Plotly.plot('chart1', graph.data, graph.layout); /* {} graph.layout paikalle ilman layout-muutoksia */
 </script>
 {% endblock %}

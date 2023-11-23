@@ -5,35 +5,39 @@ from .forms import EditProfileForm, EditProfileAdminForm
 from .. import db
 from ..models import Role, User
 from ..decorators import admin_required
-#https://www.youtube.com/watch?v=B97qWOUvlnU
 import pandas as pd
 import json
 import plotly
+import plotly.graph_objects as go
 import plotly.express as px
 
 
-
 @main.route('/')
-def index():
-    df = pd.DataFrame(dict(
-    x = [1, 2, 3, 4, 5],
+def index():   
+    x = [1, 2, 3, 4, 5]
     y = [2, 4, 6, 8, 10]
-    ))
-    
-    fig = px.line(df, x="x", y="y", title="Unsorted Input") 
+    fig = go.Figure(data=[go.Line(x=x, y=y)],layout=go.Layout(title=go.layout.Title(text="Unsorted Input")))   
 
-    #fig.update_layout(title='Line Plot: Y vs X', xaxis_title='X-axis', yaxis_title='Y-axis')
+    # This works but not possible to have specifid names for each stem/peak
+    #for x, y in zip(x_stem, y_stem):
+        #fig.add_trace(go.Scatter(x=[x, x], y=[0, y], mode='lines', line=dict(color='red'), name='stemScatter', showlegend=False))
+
+    # Create vertical lines for the stems using separate line plots
+    for i, (x, y) in enumerate(zip(x, y), start=1):
+        stem_trace = go.Scatter(
+            x=[x, x],
+            y=[0, y],
+            mode='lines',
+            line=dict(color='red'),
+            name=f'stemTrace_{i}',  # Use a unique identifier (e.g., index)
+            showlegend=False
+        )
+
+        fig.add_trace(stem_trace)
 
     # Convert the plot to graphJSON
     graphJSON = json.dumps(fig, cls=plotly.utils.PlotlyJSONEncoder)
     return render_template('index.html', graphJSON=graphJSON)
-
-    df = px.data.medals_wide()
-    fig1 = px.bar(df, x='nation', y=['gold', 'silver', 'bronze'], title="Wide-Form Input")
-    graph1JSON = json.dumps(fig1, cls=plotly.utils.PlotlyJSONEncoder)
-
-    return render_template('index.html', graph1JSON=graph1JSON)
-
 
 @main.route('/user/<username>')
 def user(username):
