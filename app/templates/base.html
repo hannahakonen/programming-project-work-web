@@ -6,6 +6,20 @@
 {{ super() }}
 <link rel="shortcut icon" href="{{ url_for('static', filename='favicon.ico') }}" type="image/x-icon">
 <link rel="icon" href="{{ url_for('static', filename='favicon.ico') }}" type="image/x-icon">
+<style>
+    body {
+        display: flex;
+        flex-direction: column;
+        min-height: 100vh;
+        }
+      
+    .container {flex:1;}
+    
+    footer {
+        margin:0 auto;
+        padding:10px;
+      }
+</style>
 {% endblock %}
 
 {% block navbar %}
@@ -47,7 +61,7 @@
 {% endblock %}
 
 {% block content %}
-<div class="container">
+<div class="container"> <!-- oma muutos container: own-container, koska on jo container navbarissa -->
     {% for message in get_flashed_messages() %}
     <div class="alert alert-warning">
         <button type="button" class="close" data-dismiss="alert">&times;</button>
@@ -57,6 +71,9 @@
 
     {% block page_content %}{% endblock %}
 </div>
+<footer style="background-color: #e3dde3;">
+    <p>&copy; 2023 Johanna Hakonen</p>
+</footer>
 {% endblock %}
 
 {% block scripts %}
