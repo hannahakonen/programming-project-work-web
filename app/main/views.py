@@ -1,4 +1,4 @@
-from flask import render_template, redirect, url_for, abort, flash
+from flask import render_template, redirect, url_for, abort, flash, request
 from flask_login import login_required, current_user
 from . import main
 from .forms import EditProfileForm, EditProfileAdminForm
@@ -11,12 +11,50 @@ import plotly
 import plotly.graph_objects as go
 import plotly.express as px
 import math
+import re
+import os
+
+UPLOAD_FOLDER = 'uploads' # THIS TO ENV
+
+def allowed_file(filename):
+    return '.' in filename and filename.rsplit('.', 1)[1].lower() in {'txt'}
+
+def read_text_file(file_path):
+    with open(file_path, 'r') as file:
+        content = file.read()
+        matches = re.findall(r'(\S+)\s*,\s*(\S+)', content)
+        x_values, y_values = zip(*map(lambda x: (float(x[0]), float(x[1])), matches))
+        return list(x_values), list(y_values)
 
 
-@main.route("/")
+@main.route("/", methods=['GET', 'POST'])
 def index():
-    x = [1, 2.2, 3.7, 14, 15, 30, 35, 60, 62.4, 64]
-    y = [2, 14, 8, 5, 9, 31.5, 20, 6, 10, 5]
+    #x = [1, 2.2, 3.7, 14, 15, 30, 35, 60, 62.4, 64]
+    #y = [2, 14, 8, 5, 9, 31.5, 20, 6, 10, 5]
+
+    x = [0]
+    y = [0]
+
+    if request.method == 'POST':
+        # Check if the post request has the file part
+        if 'file' not in request.files:
+            return render_template('index.html', error='No file part')
+        
+        file = request.files['file']
+
+        # If the user does not select a file, the browser submits an empty file
+        if file.filename == '':
+            return render_template('index.html', error='No selected file')
+
+        # If the file is allowed and has a valid extension
+        if file and allowed_file(file.filename):
+            # Save the file to the uploads folder
+            file_path = os.path.join(UPLOAD_FOLDER, file.filename)  #app.config['UPLOAD_FOLDER']
+            file.save(file_path)
+
+            # Read the content of the uploaded file
+            x, y = read_text_file(file_path)
+
     fig = go.Figure(
         data=[
             go.Line(x=x, y=y, mode="lines", line=dict(color="black"), hoverinfo="x+y")
@@ -29,7 +67,7 @@ def index():
                 # linewidth=1,
                 linecolor="black",
                 mirror=True,
-                range=[0, (math.ceil(max(x) / 10)) * 10],
+                range=[0, (math.ceil((max(x)+0.1) / 10)) * 10],
                 dtick=10,
             ),
             yaxis=dict(
@@ -38,7 +76,7 @@ def index():
                 # linewidth=1,
                 linecolor="black",
                 mirror=True,
-                range=[0, (math.ceil(max(y) / 10)) * 10],
+                range=[0, (math.ceil((max(y)+0.1) / 10)) * 10],
                 dtick=10,
             ),
             plot_bgcolor="white",
