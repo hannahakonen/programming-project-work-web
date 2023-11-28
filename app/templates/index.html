@@ -4,41 +4,53 @@
 
 {% block page_content %}
 
-    
-    <div class="own-container">
+
+<div class="container">
+
+    <div class="row p-4">
         <div class="page-header">
-            <h1>Hello, {% if current_user.is_authenticated %}{{ current_user.username }}{% else %}Stranger{% endif %}!</h1>
+            <h1>Hello, {% if current_user.is_authenticated %}{{ current_user.username }}{% else %}Stranger{% endif %}!
+            </h1>
         </div>
-        <div class="row p-4" style="background-color: rgb(106, 84, 126);">
-            <div class="card m-auto" style="width: 90;">
-                <div class="card-body">
-                    <div id="chart1">
-                    </div>
-                    <div>
-                        <form method="post" enctype="multipart/form-data">
+
+        <div class="card m-auto" style="width: 90;">
+            <div class="card-body">
+                <div id="chart1">
+                </div>
+                <div>
+                    <form method="post" enctype="multipart/form-data">
                         <input type="file" name="file" accept=".txt">
                         <input type="submit" value="Upload File">
                     </form>
-                    </div>
-                    <div><label>Show Stem Plot</label>
-                        <input type="checkbox" id="stemCheckbox" checked onchange="toggleStemPlot()">
-                    </div>
-                    <div><label>Change the Title</label>
-                        <input type="text" id="titleInput" onchange="changeTitle()">
-                    </div>
+                </div>
+                <div><label>Show Stem Plot</label>
+                    <input type="checkbox" id="stemCheckbox" checked onchange="toggleStemPlot()">
+                </div>
+                <div>
+                    <p>Initial Width: <span id="zValue">1</span></p>
+                    <input type="range" min="0.939" max="20" step="1" value="1" id="zSlider">
+                </div>
+                <div><label>Change the Title</label>
+                    <input type="text" id="titleInput" onchange="changeTitle()">
                 </div>
             </div>
         </div>
     </div>
+</div>
 
 <script src="https://cdn.plot.ly/plotly-latest.min.js"></script>
 <script>
     var graphOriginal = {{ graphJSON | safe }};
     var graph = graphOriginal;
+    var initialZ = {{ initialZ | safe }};
     var stemPlotsAdded = true;
     var stemTraces = graph.data.filter(trace => trace.name && trace.name.startsWith('stemTrace_'));
-    
-    function toggleStemPlot() {
+
+    document.getElementById('zSlider').value = initialZ;
+    document.getElementById('zValue').innerText = initialZ.toFixed(1);
+
+    //MUUTA addEventListener
+    function toggleStemPlot() { 
         var checkbox = document.getElementById('stemCheckbox');
 
         // Set visibility based on the checkbox state
@@ -50,12 +62,52 @@
         Plotly.update('chart1', stemTraces, graph.layout);
     }
 
+    document.getElementById('zSlider').addEventListener('input', function () {
+        var newValue = parseFloat(this.value);
+        document.getElementById('zValue').innerText = newValue.toFixed(1);
+        newValue = newValue.toString();
+
+        $.ajax({
+            type: 'POST',
+            url: '/update_plot',  // Change this to your server route
+            contentType: 'application/json;charset=UTF-8',
+            data: JSON.stringify({ newValue: newValue }),
+            success: function (response) {
+                // Assuming the server responds with the updated plot data
+                var newYValues = response.newYValues;
+
+                if (Array.isArray(newYValues)) {
+                    // Update the plot using Plotly or other plotting library
+                    // Find the index of the trace named "simulated plot"
+                    var simulatedPlotTraceIndex = -1;
+                    for (var i = 0; i < chart1.data.length; i++) {
+                        if (chart1.data[i].name === 'simulated plot') {
+                            simulatedPlotTraceIndex = i;
+                            break;
+                        }
+                    }
+
+                    // Update the "simulated plot" trace
+                    if (simulatedPlotTraceIndex !== -1) {
+                        Plotly.update('chart1', { y: [newYValues] }, {}, [simulatedPlotTraceIndex]);
+                    }
+                } else {
+                    console.error('Invalid newYValues received:', newYValues);
+                }
+            },
+            error: function (error) {
+                console.error('Error:', error);
+            }
+        });
+    });
+
     function removeStem() {
         graph.data = graph.data.filter(trace => !trace.name || !trace.name.startsWith('stemTrace_')); /* removes all the peaks */
 
         Plotly.react('chart1', graph, {});
     }
-
+    
+    //MUUTA addEventListener
     function changeTitle() {
         var title = document.getElementById('titleInput').value;
 
