@@ -4,38 +4,92 @@
 
 {% block page_content %}
 
+<style>
+    .btn-own, input[type="submit"] {
+        display: inline-block;
+        padding: 5px 10px;
+        margin: 8px 0;
+        font-size: 14px;
+        font-weight: bold;
+        text-align: center;
+        text-decoration: none;
+        cursor: pointer;
+        border: 2px solid rgb(114, 98, 130);
+        color: #000000;
+        border-radius: 5px;
+        background-color: rgb(167, 153, 181);
+    }
 
+    .btn-own:hover {
+        background-color: rgb(142, 126, 159);
+    }
+
+    /* Hide the actual file input */
+    input[type="file"] {
+        display: none;
+    }
+
+    /* Hide the slider value */
+    #zSlider {
+        width: 100%;
+        /* Make the slider full width */
+        margin: 0;
+        /* Remove default margin */
+    }
+
+    .slider-label {
+        display: none;
+        /* Hide the label */
+    }
+</style>
 <div class="container">
 
-    <div class="row p-4">
+    <div class="row p-4" style="max-width: 500px;">
         <div class="page-header">
-            <h1>Hello, {% if current_user.is_authenticated %}{{ current_user.username }}{% else %}Stranger{% endif %}!
-            </h1>
+            <h2>Raman Spectrum Simulator
+            </h2>
         </div>
-
         <div class="card m-auto" style="width: 90;">
             <div class="card-body">
-                <div id="chart1">
+                <div>
+
+                    <p style="max-width: 500px; font-size: 16px">Simulate experimental molecular spectrum from
+                        quantum
+                        chemical vibration data</p>
                 </div>
                 <div>
                     <form method="post" enctype="multipart/form-data">
-                        <input type="file" name="file" accept=".txt">
-                        <input type="submit" value="Upload File">
+                        <!-- Label for the file input -->
+                        <label for="file" class="btn-own">Choose File</label>
+                        <!-- Actual file input (hidden) -->
+                        <input type="file" name="file" id="file" accept=".txt">
+                        <!-- Submit button -->
+                        <input type="submit" value="Open File">
                     </form>
                 </div>
-                <div><label>Show Stem Plot</label>
-                    <input type="checkbox" id="stemCheckbox" checked onchange="toggleStemPlot()">
-                </div>
-                <div>
-                    <p>Initial Width: <span id="zValue">1</span></p>
-                    <input type="range" min="0.939" max="20" step="1" value="1" id="zSlider">
-                </div>
-                <div><label>Change the Title</label>
+            </div>
+
+
+            <div id="chart1">
+            </div>
+            <div class="row" style="margin-top: 8px; margin-bottom: 8px;">
+                <div class="col-sm-5"><label for="titleInput">Title</label>
                     <input type="text" id="titleInput" onchange="changeTitle()">
                 </div>
+                <div class="col-sm-4">
+                    <label for="zSlider">Width</label>
+                    <input type="range" min="1" max="10" step="0.5" id="zSlider">
+                </div>
+
+                <div class="col-sm-3">
+                    <label for="stemCheckbox">Peaks</label>
+                    <input type="checkbox" id="stemCheckbox" checked onchange="toggleStemPlot()">
+                </div>
+
             </div>
         </div>
     </div>
+</div>
 </div>
 
 <script src="https://cdn.plot.ly/plotly-latest.min.js"></script>
@@ -46,11 +100,16 @@
     var stemPlotsAdded = true;
     var stemTraces = graph.data.filter(trace => trace.name && trace.name.startsWith('stemTrace_'));
 
+    function displayFileName(input) {
+        var customButton = document.getElementById('customButton');
+        customButton.innerText = input.files[0].name;
+    }
+
     document.getElementById('zSlider').value = initialZ;
-    document.getElementById('zValue').innerText = initialZ.toFixed(1);
+    //document.getElementById('zValue').innerText = initialZ.toFixed(1);
 
     //MUUTA addEventListener
-    function toggleStemPlot() { 
+    function toggleStemPlot() {
         var checkbox = document.getElementById('stemCheckbox');
 
         // Set visibility based on the checkbox state
@@ -64,7 +123,7 @@
 
     document.getElementById('zSlider').addEventListener('input', function () {
         var newValue = parseFloat(this.value);
-        document.getElementById('zValue').innerText = newValue.toFixed(1);
+        //document.getElementById('zValue').innerText = newValue.toFixed(1);
         newValue = newValue.toString();
 
         $.ajax({
@@ -106,7 +165,7 @@
 
         Plotly.react('chart1', graph, {});
     }
-    
+
     //MUUTA addEventListener
     function changeTitle() {
         var title = document.getElementById('titleInput').value;

@@ -23,6 +23,8 @@ def allowed_file(filename):
     return '.' in filename and filename.rsplit('.', 1)[1].lower() in {'txt'}
 
 def read_text_file(file_path):
+    #MainConfig.FREQUENCIES = [0]
+    #MainConfig.INTENSITIES = [0]
     with open(file_path, 'r') as file:
         content = file.read()
         matches = re.findall(r'(\S+)\s*,\s*(\S+)', content)
@@ -119,7 +121,7 @@ def index():
             paper_bgcolor="white",
             showlegend=False,
             width=500,
-            height=400,
+            height=350,
         ),)
 
     # Create vertical lines for the stems using separate line plots
@@ -127,57 +129,9 @@ def index():
         stem_trace = draw_stem_plot(i, x, y)
         fig.add_trace(stem_trace)
 
-    '''
-    for i, (frequencies, intensities) in enumerate(zip(frequencies, intensities), start=1):
-        stem_trace = go.Scatter(
-            x=[frequencies, frequencies],
-            y=[0, intensities],
-            mode="lines",
-            line=dict(color="red"),
-            name=f"stemTrace_{i}",  # Use a unique identifier (e.g., index)
-            showlegend=False,
-            hoverinfo="x+y",
-        )
-        fig.add_trace(stem_trace)
-    '''
-
     # Create the simulated trace using a method
     simulated_plot = draw_simulated_plot(frequencies=frequencies, intensities=intensities, fwhm=fwhm) #initial_fwhm, fwhm_at_max)
     fig.add_trace(simulated_plot)
-
-    '''
-    fig = go.Figure(
-        data=[
-            go.Scatter(x=frequencies, y=intensities, mode="lines", line=dict(color="black"), hoverinfo="x+y") 
-        ],
-        layout=go.Layout(
-            title=go.layout.Title(text="Raman Spectrum"),
-            xaxis=dict(
-                title="Frequency (1/cm)",
-                showline=True,
-                # linewidth=1,
-                linecolor="black",
-                mirror=True,
-                range=[0, (math.ceil((max(frequencies)+0.1) / 10)) * 10],
-                dtick=10,
-            ),
-            yaxis=dict(
-                title="Intensity",
-                showline=True,
-                # linewidth=1,
-                linecolor="black",
-                mirror=True,
-                range=[0, (math.ceil((max(intensities)+0.1) / 10)) * 10],
-                dtick=10,
-            ),
-            plot_bgcolor="white",
-            paper_bgcolor="white",
-            showlegend=False,
-            width=500,
-            height=400,
-        ),
-    )
-    '''
 
     # This works but not possible to have specifid names for each stem/peak
     # for x, y in zip(x_stem, y_stem):
