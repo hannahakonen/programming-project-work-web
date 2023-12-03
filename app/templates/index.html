@@ -5,7 +5,7 @@
 {% block page_content %}
 
 <style>
-    .btn-own, input[type="submit"] {
+    .btn-own, input[type="submit"], #saveToDatabase, .select {
         display: inline-block;
         padding: 5px 10px;
         margin: 8px 0;
@@ -20,8 +20,18 @@
         background-color: rgb(167, 153, 181);
     }
 
-    .btn-own:hover {
+    .btn-own:hover, input[type="submit"]:hover, #saveToDatabase:hover, .select:hover {
         background-color: rgb(142, 126, 159);
+    }
+
+    /* Customize the appearance of the dropdown arrow */
+    .select::after {
+        content: '\25BC'; /* Unicode character for a downward arrow */
+        position: absolute;
+        top: 50%;
+        right: 10px;
+        transform: translateY(-50%);
+        pointer-events: none; /* Ensures the arrow doesn't interfere with the click on the select box */
     }
 
     /* Hide the actual file input */
@@ -63,9 +73,18 @@
                         <label for="file" class="btn-own">Choose File</label>
                         <!-- Actual file input (hidden) -->
                         <input type="file" name="file" id="file" accept=".txt">
-                        <!-- Submit button -->
                         <input type="submit" value="Open File">
                     </form>
+                    {% if current_user.is_authenticated %}
+                     <select class="select">
+                        <option value="" disabled selected>Open from Database</option>
+                        <option value="option1">Option 1</option>
+                        <option value="option2">Option 2</option>
+                        <option value="option3">Option 3</option>
+                    </select>
+                    <button id="saveToDatabase" onclick="saveToDatabase()">Save to Database</button>
+                    {% endif %}
+                    
                 </div>
             </div>
 
@@ -78,7 +97,7 @@
                 </div>
                 <div class="col-sm-4">
                     <label for="zSlider">Width</label>
-                    <input type="range" min="1" max="10" step="0.5" id="zSlider">
+                    <input type="range" min="1" max="70" step="1" id="zSlider">
                 </div>
 
                 <div class="col-sm-3">
@@ -99,7 +118,7 @@
     var initialZ = {{ initialZ | safe }};
     var stemPlotsAdded = true;
     var stemTraces = graph.data.filter(trace => trace.name && trace.name.startsWith('stemTrace_'));
-
+    
     function displayFileName(input) {
         var customButton = document.getElementById('customButton');
         customButton.innerText = input.files[0].name;
@@ -134,7 +153,8 @@
             success: function (response) {
                 // Assuming the server responds with the updated plot data
                 var newYValues = response.newYValues;
-
+                
+                //NO SENSE: simulate always the last: index = chart1.data.length - 1
                 if (Array.isArray(newYValues)) {
                     // Update the plot using Plotly or other plotting library
                     // Find the index of the trace named "simulated plot"

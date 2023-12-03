@@ -16,6 +16,7 @@ import os
 import numpy as np
 from . import main # turha? ei tuonut mainconfigia
 from .config import MainConfig
+from werkzeug.utils import secure_filename
 
 UPLOAD_FOLDER = 'uploads' # THIS TO ENV
 
@@ -31,15 +32,12 @@ def read_text_file(file_path):
         x_values, y_values = zip(*map(lambda x: (float(x[0]), float(x[1])), matches))
         return list(x_values), list(y_values)
 
-def calculate_y():
-    pass
-
 def draw_stem_plot(i, frequencies, intensities): 
     stem_plot = go.Scatter(
         x=[frequencies, frequencies],
         y=[0, intensities],
         mode="lines",
-        line=dict(color="dark red"),
+        line=dict(color="black"),
         name=f"stemTrace_{i}",  # Use a unique identifier (e.g., index)
         showlegend=False,
         hoverinfo="x+y",
@@ -53,7 +51,7 @@ def set_sigma(fwhm):
 def draw_simulated_plot(frequencies, intensities, fwhm):  
     fwhm_at_max =  2 * (np.sqrt(np.log(2))) / (np.sqrt(np.pi))
     sigma = fwhm / (2 * np.sqrt(2 * np.log(2)))
-    x_stop = frequencies[-1] + 10
+    x_stop = frequencies[-1] + 1000
     x_start = 0 #frequencies[0] - 50
     x = np.linspace(x_start, int(x_stop), 10000)
     sum_y = 0
@@ -65,14 +63,19 @@ def draw_simulated_plot(frequencies, intensities, fwhm):
         sum_y += scaling_factor * fx * intensities[i]
 
     #simulated_plot = go.Scatter(x=frequencies, y=intensities, mode="lines", line=dict(color="black"), hoverinfo="x+y")
-    simulated_plot = go.Scatter(x=x, y=sum_y, mode="lines", line=dict(color="black"), name="simulated plot", hoverinfo="x+y")
+    simulated_plot = go.Scatter(x=x, y=sum_y, mode="lines", line=dict(color="rgb(114, 98, 130)"), name="simulated plot", hoverinfo="x+y")
     return simulated_plot
+
+def remove_extension(filename):
+    root, _ = os.path.splitext(filename)
+    return root
 
 @main.route("/", methods=['GET', 'POST'])
 def index():
     frequencies = MainConfig.FREQUENCIES
     intensities = MainConfig.INTENSITIES
-    fwhm = float(1)
+    filename = 'Raman Spectrum'
+    fwhm = float(20)
       # x=X, ymax=Y, fx=1, ca. 0.94
 
     if request.method == 'POST':
@@ -80,7 +83,8 @@ def index():
         if 'file' not in request.files:
             return render_template('index.html', error='No file part')
         
-        file = request.files['file']
+        file = request.files['file'] #KOKEILU POIS
+        #file = request.files.get("file") #TESTAA TÄMÄ
 
         # If the user does not select a file, the browser submits an empty file
         if file.filename == '':
@@ -88,34 +92,45 @@ def index():
 
         # If the file is allowed and has a valid extension
         if file and allowed_file(file.filename):
-            # Save the file to the uploads folder
-            file_path = os.path.join(UPLOAD_FOLDER, file.filename)  #app.config['UPLOAD_FOLDER']
-            file.save(file_path)
+
+            #KOKEILU
+            filename = secure_filename(file.filename)
+            filename = remove_extension(filename)
+            content = file.read().decode("utf-8")
+            matches = re.findall(r'(\S+)\s*(\S+)', content)
+            frequencies, intensities = zip(*map(lambda x: (float(x[0]), float(x[1])), matches))
+
+            # Save the file to the uploads folder KOKEILU ILMAN TIEDOSTON TALLENNUSTA
+            #file_path = os.path.join(UPLOAD_FOLDER, file.filename)  #app.config['UPLOAD_FOLDER']
+            #file.save(file_path)
 
             # Read the content of the uploaded file
-            frequencies, intensities = read_text_file(file_path)
+            #frequencies, intensities = read_text_file(file_path) #KOKEILU
             MainConfig.FREQUENCIES = frequencies
             MainConfig.INTENSITIES = intensities
 
     fig = go.Figure(layout=go.Layout(
-            title=go.layout.Title(text="Raman Spectrum"),
+            title=go.layout.Title(text=filename, x=0.5),
             xaxis=dict(
                 title="Frequency (1/cm)",
                 showline=True,
-                # linewidth=1,
+                linewidth=1,
                 linecolor="black",
                 mirror=True,
-                range=[0, (math.ceil((max(frequencies)+0.1) / 10)) * 10],
-                dtick=10,
+                range=[0, (math.ceil((max(frequencies)+0.1) / 100)) * 100],
+                dtick=100,
             ),
             yaxis=dict(
                 title="Intensity",
                 showline=True,
-                # linewidth=1,
+                linewidth=1,
                 linecolor="black",
                 mirror=True,
-                range=[0, (math.ceil((max(intensities)+0.1) / 10)) * 10],
-                dtick=10,
+                range=[-40, (math.ceil((max(intensities)+0.1) / 100)) * 100],
+                dtick=200,
+                zeroline=True,  # Add this line
+                zerolinecolor='black',  # Add this line
+                zerolinewidth=1,  # Add this line
             ),
             plot_bgcolor="white",
             paper_bgcolor="white",
