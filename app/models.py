@@ -5,6 +5,7 @@ from itsdangerous.url_safe import URLSafeTimedSerializer as Serializer #gives ty
 from flask import current_app
 from flask_login import UserMixin, AnonymousUserMixin
 from . import db, login_manager
+from sqlalchemy import PickleType
 
 class Permission:
     FOLLOW = 1
@@ -181,3 +182,15 @@ login_manager.anonymous_user = AnonymousUser
 @login_manager.user_loader
 def load_user(user_id):
     return User.query.get(int(user_id))
+
+class UserSpectrum(db.Model):
+    __tablename__ = 'user_spectra'
+    id = db.Column(db.Integer, primary_key=True)
+    user_id = db.Column(db.Integer, db.ForeignKey('users.id'))
+    title = db.Column(db.String(64))
+    frequency = db.Column(PickleType)
+    intensity = db.Column(PickleType)
+    timestamp = db.Column(db.DateTime, index=True, default=datetime.utcnow)
+
+    def __repr__(self):
+        return '<Spectrum %r>' % self.title

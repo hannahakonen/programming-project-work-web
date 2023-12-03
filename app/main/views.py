@@ -3,7 +3,7 @@ from flask_login import login_required, current_user
 from . import main
 from .forms import EditProfileForm, EditProfileAdminForm
 from .. import db
-from ..models import Role, User
+from ..models import Role, User, UserSpectrum
 from ..decorators import admin_required
 import pandas as pd
 import json
@@ -109,6 +109,21 @@ def index():
             MainConfig.FREQUENCIES = frequencies
             MainConfig.INTENSITIES = intensities
 
+    '''
+    # Testispektrien lisäys tietokantaan
+    frequencies = [1, 5, 7, 21, 23, 60, 70, 80, 90, 100, 110, 120, 130, 140, 150, 160]
+    intensities = [6, 20, 30, 40, 50, 60, 70, 80, 90, 100, 90, 80, 70, 60, 50, 40]
+
+    # Create a new UserSpectrum instance
+    user_spectrum = UserSpectrum(user_id=2, title='testi1', frequency=frequencies, intensity=intensities)
+
+    # Add the new UserSpectrum instance to the database session
+    db.session.add(user_spectrum)
+
+    # Commit the session to save the changes
+    db.session.commit()
+    '''
+    
     fig = go.Figure(layout=go.Layout(
             title=go.layout.Title(text=filename, x=0.5),
             xaxis=dict(
@@ -156,6 +171,14 @@ def index():
     graphJSON = json.dumps(fig, cls=plotly.utils.PlotlyJSONEncoder)
     return render_template("index.html", graphJSON=graphJSON, frequencies=frequencies, intensities=intensities, draw_simulated_plot=draw_simulated_plot, initialZ=fwhm)
 
+@main.route('/get_titles', methods=['GET'])
+def get_titles():
+    # Query the user_spectra table for titles based on the current_user id
+    titles = db.session.query(UserSpectrum.title).filter(UserSpectrum.user_id == current_user.id).all()
+
+    # Convert the titles to JSON and return them
+    return jsonify([title[0] for title in titles])
+    
 @main.route('/update_plot', methods=['POST'])
 def update_plot():
     frequencies = MainConfig.FREQUENCIES
@@ -171,6 +194,13 @@ def update_plot():
     response = {'newYValues': new_simulated_plot.y.tolist()}  # Convert y values to a list
     #response = {'newYValues': plot_data}
     return jsonify(response)
+
+@main.route("/save_to_database", methods=['POST']) # KESKEN
+def save_to_database():
+    frequencies = MainConfig.FREQUENCIES
+    intensities = MainConfig.INTENSITIES
+    data = request.get_json()
+    title = float(data['title'])
 
 @main.route("/user/<username>")
 def user(username):
