@@ -129,20 +129,19 @@
     var stemTraces = graph.data.filter(trace => trace.name && trace.name.startsWith('stemTrace_'));
 
     function saveToDatabase() {
-        var title = document.getElementById('titleInput').value;
-        var userId = '{{ current_user.id }}';  // Assuming you're using Flask and Jinja2
+        var title = graph.layout.title.text;
     
         // Send the data to the server using an AJAX request
         $.ajax({
-            url: '/save_to_database',  // Replace with your server-side route
+            url: '/save_to_database',
             type: 'POST',
             data: {
-                'title': title,
-                'user_id': userId // not needed?
+                'title': title
             },
             success: function(response) {
                 // Handle the response from the server
-                console.log(response);
+                //console.log(response);
+                alert(response.message);
             },
             error: function (error) {
                 console.error('Error:', error);
@@ -164,6 +163,27 @@
                 });
             }
         });
+    });
+
+    $('#titleDropdown').change(function() {
+        var title = $(this).val();
+    
+        if (title) {
+            $.ajax({
+                url: '/open_from_database',
+                type: 'GET',
+                data: {
+                    'title': title
+                },
+                success: function(response) {
+                    // Convert the plot JSON to a figure
+                    var fig = JSON.parse(response.graphJSON);
+
+                // Display the figure
+                Plotly.newPlot('chart1', fig);
+                }
+            });
+        }
     });
 
     function displayFileName(input) {

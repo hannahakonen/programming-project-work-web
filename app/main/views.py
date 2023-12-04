@@ -123,7 +123,7 @@ def index():
     # Commit the session to save the changes
     db.session.commit()
     '''
-    
+
     fig = go.Figure(layout=go.Layout(
             title=go.layout.Title(text=filename, x=0.5),
             xaxis=dict(
@@ -178,7 +178,74 @@ def get_titles():
 
     # Convert the titles to JSON and return them
     return jsonify([title[0] for title in titles])
+
+@main.route('/save_to_database', methods=['POST'])
+def save_to_database():
+    # Extract the data from the request
+    title = request.form.get('title')
+    print('Title:', title)  
+    user_spectrum = UserSpectrum(user_id=current_user.id, title=title, frequency=MainConfig.FREQUENCIES, intensity=MainConfig.INTENSITIES)
+    db.session.add(user_spectrum)
+    db.session.commit()
+    #flash('Your spectrum has been saved.') #not working right after saving but later because of the ajax call 
+    #return redirect(url_for('main.index'))
+    # Return a success response
+    return jsonify({'message': 'Your spectrum has been saved'})
     
+@main.route('/open_from_database', methods=['GET'])
+def open_from_database():
+    title = request.args.get('title')
+    spectrum = UserSpectrum.query.filter_by(title=title).first()
+    MainConfig.FREQUENCIES = spectrum.frequency
+    MainConfig.INTENSITIES = spectrum.intensity
+    frequencies = MainConfig.FREQUENCIES
+    intensities = MainConfig.INTENSITIES
+    fwhm = float(20)
+    fig = go.Figure(layout=go.Layout(
+            title=go.layout.Title(text=title, x=0.5),
+            xaxis=dict(
+                title="Frequency (1/cm)",
+                showline=True,
+                linewidth=1,
+                linecolor="black",
+                mirror=True,
+                range=[0, (math.ceil((max(frequencies)+0.1) / 100)) * 100],
+                dtick=100,
+            ),
+            yaxis=dict(
+                title="Intensity",
+                showline=True,
+                linewidth=1,
+                linecolor="black",
+                mirror=True,
+                range=[-40, (math.ceil((max(intensities)+0.1) / 100)) * 100],
+                dtick=200,
+                zeroline=True,  # Add this line
+                zerolinecolor='black',  # Add this line
+                zerolinewidth=1,  # Add this line
+            ),
+            plot_bgcolor="white",
+            paper_bgcolor="white",
+            showlegend=False,
+            width=500,
+            height=350,
+        ),)
+
+    # Create vertical lines for the stems using separate line plots
+    for i, (x, y) in enumerate(zip(frequencies, intensities), start=1):
+        stem_trace = draw_stem_plot(i, x, y)
+        fig.add_trace(stem_trace)
+
+    # Create the simulated trace using a method
+    simulated_plot = draw_simulated_plot(frequencies=frequencies, intensities=intensities, fwhm=fwhm) #initial_fwhm, fwhm_at_max)
+    fig.add_trace(simulated_plot)
+
+    graphJSON = json.dumps(fig, cls=plotly.utils.PlotlyJSONEncoder)
+    #return render_template("index.html", graphJSON=graphJSON, frequencies=frequencies, intensities=intensities, draw_simulated_plot=draw_simulated_plot, initialZ=fwhm)
+
+    # Return the spectrum data as an ajax response
+    return jsonify({'graphJSON': graphJSON})
+
 @main.route('/update_plot', methods=['POST'])
 def update_plot():
     frequencies = MainConfig.FREQUENCIES
@@ -194,13 +261,6 @@ def update_plot():
     response = {'newYValues': new_simulated_plot.y.tolist()}  # Convert y values to a list
     #response = {'newYValues': plot_data}
     return jsonify(response)
-
-@main.route("/save_to_database", methods=['POST']) # KESKEN
-def save_to_database():
-    frequencies = MainConfig.FREQUENCIES
-    intensities = MainConfig.INTENSITIES
-    data = request.get_json()
-    title = float(data['title'])
 
 @main.route("/user/<username>")
 def user(username):
