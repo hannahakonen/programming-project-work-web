@@ -123,6 +123,11 @@ def index():
     # Commit the session to save the changes
     db.session.commit()
     '''
+    '''
+    UserSpectrum.query.delete()
+    # Commit the changes to the database
+    db.session.commit()
+    '''
 
     fig = go.Figure(layout=go.Layout(
             title=go.layout.Title(text=filename, x=0.5),

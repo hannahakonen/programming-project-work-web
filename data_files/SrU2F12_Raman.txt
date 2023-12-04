@@ -1,5 +1,3 @@
-# SrU2F12 Raman spectrum
-# X = Freq (cm^-1); Y = Polycrystalline Raman intensity (arb. units)
 41.75       0.1
 84.27       0.95
 88.65       0.0
